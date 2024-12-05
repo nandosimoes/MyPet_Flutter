@@ -51,7 +51,7 @@ class Header extends StatelessWidget {
   Widget _buildAnimalIcon(IconData icon, String label, String animalType) {
     return GestureDetector(
       onTap: () {
-        onAnimalTypeSelected(animalType);  // Chama o callback ao selecionar um animal
+        onAnimalTypeSelected(animalType); 
       },
       child: Column(
         children: [

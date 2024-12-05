@@ -1,18 +1,38 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../widgets/pet_card.dart';
 import '../widgets/bottom_navigation.dart';
-import '../widgets/header.dart';
-import '../models/pet.dart';
-import '../services/pet_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final PetService petService = PetService();
-  String selectedAnimalType = 'Todos';
+  List<Map<String, dynamic>> pets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPets();
+  }
+
+  void fetchPets() {
+    const String apiUrl = "https://pet-adopt-dq32j.ondigitalocean.app/pet/pets";
+    http.get(Uri.parse(apiUrl)).then((response) {
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body)['pets'];
+        setState(() {
+          pets = List<Map<String, dynamic>>.from(responseData);
+        });
+      }
+    }).catchError((error) {
+      debugPrint("Erro ao carregar pets: $error");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'My',
               style: TextStyle(
-                  color: Colors.blue[900], fontWeight: FontWeight.bold),
+                color: Colors.blue[900],
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Image.asset(
               'lib/assets/pata.png',
@@ -38,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Pet',
               style: TextStyle(
-                  color: Colors.blue[900], fontWeight: FontWeight.bold),
+                color: Colors.blue[900],
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -46,65 +70,56 @@ class _HomeScreenState extends State<HomeScreen> {
           CircleAvatar(
             backgroundImage: AssetImage('lib/assets/profile_pic.png'),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
         ],
       ),
       body: Column(
         children: [
-          Header(
-            location: 'Embu das Artes',
-            onAnimalTypeSelected: (String animalType) {
-              setState(() {
-                selectedAnimalType = animalType;  
-              });
-            },
-          ), 
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            color: Colors.white,
+            child: Row(
+              children: [
+                Icon(Icons.location_on, color: Colors.grey[600]),
+                const SizedBox(width: 5),
+                Text(
+                  'Embu das Artes',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: _filteredPets().length,
-                itemBuilder: (context, index) {
-                  Pet pet = _filteredPets()[index];
-                  List<Color> imageBackgroundColors = [
-                    Color.fromARGB(255, 255, 193, 193),
-                    Color.fromARGB(255, 215, 244, 221),
-                    Color.fromARGB(255, 179, 229, 252),
-                    Color.fromARGB(255, 255, 243, 211),
-                    Color.fromARGB(255, 255, 217, 197),
-                    Color.fromARGB(255, 236, 208, 255),
-                    Color.fromARGB(255, 195, 254, 244),
-                    Color.fromARGB(255, 255, 171, 171),
-                    Color.fromARGB(255, 214, 199, 230),
-                    Color.fromARGB(255, 224, 224, 224),
-                  ];
-                  Color imageColor = imageBackgroundColors[
-                      index % imageBackgroundColors.length];
-                  return PetCard(pet: pet, imageBackgroundColor: imageColor);
-                },
-              ),
+              child: pets.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: pets.length,
+                      itemBuilder: (context, index) {
+                        return PetCard(
+                          name: pets[index]['name'],
+                          images: pets[index]['images'],
+                          petData: pets[index],
+                        );
+                      },
+                    ),
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomNavigation(),
     );
-  }
-
-  List<Pet> _filteredPets() {
-    if (selectedAnimalType == 'Todos') {
-      return petService.getPets();
-    } else {
-      return petService
-          .getPets()
-          .where((pet) => pet.species == selectedAnimalType)
-          .toList();
-    }
   }
 }

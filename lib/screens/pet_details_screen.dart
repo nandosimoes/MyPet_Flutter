@@ -1,172 +1,90 @@
 import 'package:flutter/material.dart';
-import '../models/pet.dart';
 
-class PetDetailsScreen extends StatefulWidget {
-  final Pet pet;
+class PetDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> pet;
 
-  PetDetailsScreen({required this.pet});
-
-  @override
-  _PetDetailsScreenState createState() => _PetDetailsScreenState();
-}
-
-class _PetDetailsScreenState extends State<PetDetailsScreen> {
-  bool isFavorited = false; 
+  const PetDetailsScreen({Key? key, required this.pet}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.pet.name),
+        title: Text(pet['name'] ?? 'Detalhes do Pet'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
+        backgroundColor: Colors.green[700],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 500,
-                  child: Image.asset(
-                    'lib/assets/background.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 60,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Image.asset(
-                      widget.pet.imagePath,
-                      width: 480,
-                      height: 480,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ],
+            Container(
+              width: double.infinity,
+              height: 300,
+              child: Image.network(
+                pet['images'] != null && pet['images'].isNotEmpty
+                    ? pet['images'][0]
+                    : 'https://via.placeholder.com/300',
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          widget.pet.name,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              isFavorited
-                                  ? Icons.favorite 
-                                  : Icons.favorite_border, 
-                              color: isFavorited ? Colors.red : Colors.amber,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                isFavorited = !isFavorited;
-                              });
-                            },
-                          ),
-                          SizedBox(width: 10),
-                          _buildOutlinedIcon(Icons.share),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildInfoBox("Idade", "${widget.pet.age}"),
-                      _buildInfoBox("Raça", widget.pet.breed),
-                      _buildInfoBox("Peso", widget.pet.weight), 
-                      _buildInfoBox(
-                          "Vacinas", widget.pet.hasVaccines ? "Sim" : "Não"),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(Icons.account_circle, size: 50, color: Colors.grey),
-                      SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Nome do Doador',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Text(
-                            'Doadora',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      Spacer(),
-                      Icon(Icons.more_vert),
-                    ],
-                  ),
-                  SizedBox(height: 8),
                   Text(
-                    widget.pet.description,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+                    pet['name'] ?? 'Nome do Pet',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                          ),
-                          child: Text(
-                            'Adote',
-                            style: TextStyle(color: Colors.black),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      FloatingActionButton(
-                        onPressed: () {},
-                        backgroundColor: Colors.amber,
-                        child: Icon(Icons.chat, color: Colors.black),
-                      ),
+                      _buildInfoBox("Idade", "${pet['age'] ?? 'N/A'} anos"),
+                      _buildInfoBox("Peso", "${pet['weight'] ?? 'N/A'} kg"),
+                      _buildInfoBox("Cor", pet['color'] ?? 'N/A'),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Descrição",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    pet['description'] ??
+                        "Este pet está esperando por um lar amoroso! Entre em contato para saber mais.",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[700],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Adotar',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -177,28 +95,12 @@ class _PetDetailsScreenState extends State<PetDetailsScreen> {
     );
   }
 
-  Widget _buildOutlinedIcon(IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.amber, width: 2),
-      ),
-      padding: EdgeInsets.all(8),
-      child: Icon(
-        icon,
-        color: Colors.amber,
-        size: 24,
-      ),
-    );
-  }
-
   Widget _buildInfoBox(String title, String value) {
     return Container(
-      width: 80,
-      height: 80,
-      alignment: Alignment.center,
+      width: 100,
+      height: 100,
       decoration: BoxDecoration(
-        color: Color(0xFFFADADD),
+        color: Colors.grey[200],
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -206,13 +108,15 @@ class _PetDetailsScreenState extends State<PetDetailsScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(fontSize: 14),
-            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14),
           ),
         ],
       ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_pet_app/screens/add_pet_screen.dart';
 import 'package:my_pet_app/screens/profile_screen.dart';
-import '../screens/home_screen.dart';       
-import '../screens/favorites_screen.dart';     
+import '../screens/home_screen.dart';        
 
 class BottomNavigation extends StatelessWidget {
   @override
@@ -13,10 +12,6 @@ class BottomNavigation extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite),
-          label: 'Favoritos',
         ),
                 BottomNavigationBarItem(
           icon: Icon(Icons.person),
@@ -36,19 +31,13 @@ class BottomNavigation extends StatelessWidget {
               MaterialPageRoute(builder: (context) => HomeScreen()),
             );
             break;
-          case 1:
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => FavoriteScreen()),
-            );
-            break;
-            case 2:
+            case 1:
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => ProfileScreen())
             );
              break;
-            case 3:
+            case 2:
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => AddPetScreen())

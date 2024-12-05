@@ -1,18 +1,65 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:my_pet_app/screens/favorites_screen.dart';
-import 'package:my_pet_app/screens/home_screen.dart'; 
-import 'package:my_pet_app/screens/add_pet_screen.dart';
-import 'package:my_pet_app/screens/settings_screen.dart';
-import 'package:my_pet_app/widgets/bottom_navigation.dart'; 
+import 'package:http/http.dart' as http;
+import 'package:localstorage/localstorage.dart';
+import 'package:my_pet_app/widgets/pet_card.dart';
+import 'package:my_pet_app/widgets/bottom_navigation.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late LocalStorage localStorage;
+  List<Map<String, dynamic>> userPets = [];
+  String msgError = "";
+
+  @override
+  void initState() {
+    super.initState();
+    localStorage = LocalStorage('my_pet');
+    fetchUserPets();
+  }
+
+  void fetchUserPets() async {
+    await localStorage.ready; 
+    var token = localStorage.getItem("token");
+
+    const String apiUrl = "https://pet-adopt-dq32j.ondigitalocean.app/pet/user_pets"; 
+    try {
+      var response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body)['pets'];
+        setState(() {
+          userPets = List<Map<String, dynamic>>.from(responseData);
+        });
+      } else {
+        setState(() {
+          msgError = "Erro ao carregar pets: ${response.statusCode}";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        msgError = "Erro ao carregar pets: $e";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
- appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Text(
@@ -31,89 +78,46 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
-
       ),
-      body: Container(
-       
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(height: 20),
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage('lib/assets/profile_pic.png'),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 20),
+            CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('lib/assets/profile_pic.png'),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Usuário',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[900],
               ),
-              SizedBox(height: 20),
-              Text(
-                'Usuário',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
-                ),
-              ),
-              SizedBox(height: 20),
-              Card(
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 10),
-                child: ListTile(
-                  leading: Icon(Icons.home, color: Colors.blue[900]),
-                  title: Text('Home'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
-                  },
-                ),
-              ),
-              Card(
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 10),
-                child: ListTile(
-                  leading: Icon(Icons.add, color: Colors.blue[900]),
-                  title: Text('Adicionar'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AddPetScreen()),
-                    );
-                  },
-                ),
-              ),
-              Card(
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 10),
-                child: ListTile(
-                  leading: Icon(Icons.favorite, color: Colors.blue[900]),
-                  title: Text('Favoritos'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => FavoriteScreen()),
-                    );
-                  },
-                ),
-                
-              ),
-               Card(
-                elevation: 4,
-                margin: EdgeInsets.symmetric(vertical: 10),
-                child: ListTile(
-                  leading: Icon(Icons.settings, color: Colors.blue[900]),
-                  title: Text('Configurações'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SettingsScreen()),
-                    );
-                  },
-                ),
-              ),
+            ),
+            SizedBox(height: 20),
+            if (msgError.isNotEmpty) ...[
+              Text(msgError, style: TextStyle(color: Colors.red)),
+              SizedBox(height: 10),
             ],
-          ),
+            Expanded(
+              child: userPets.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: userPets.length,
+                      itemBuilder: (context, index) {
+                        return PetCard(
+                          name: userPets[index]['name'],
+                          images: userPets[index]['images'],
+                          petData: userPets[index],
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: BottomNavigation(),

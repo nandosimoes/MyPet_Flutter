@@ -1,4 +1,4 @@
-name: my_pet_app 
+name: my_pet_app
 description: A new Flutter project for pet adoption.
 
 publish_to: 'none'
@@ -6,12 +6,15 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.0.0
   cupertino_icons: ^1.0.2
+  localstorage: ^4.0.0
+  
 
 dev_dependencies:
   flutter_test:
@@ -19,27 +22,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
   assets:
-    - lib/assets/fundoWelcome.png
-    - lib/assets/mulherCachorro.png
-    - lib/assets/pata.png
-    - lib/assets/bernardo.png
-    - lib/assets/helena.png
-    - lib/assets/cesar.png
-    - lib/assets/winky.png
-    - lib/assets/profile_pic.png
-    - lib/assets/background.png
-    - lib/assets/cachorro1.png
-    - lib/assets/cachorro2.png
-    - lib/assets/cachorro3.png
-    - lib/assets/cachorro4.png
-    - lib/assets/passaro1.png
-    - lib/assets/passaro2.png
-    - lib/assets/passaro3.png
-    - lib/assets/passaro4.png
-    - lib/assets/coelho1.png
-    - lib/assets/coelho2.png
-    - lib/assets/coelho3.png
-    - lib/assets/coelho4.png
-
+    - lib/assets/

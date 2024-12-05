@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:localstorage/localstorage.dart';
+import 'login_screen.dart';
 import '../widgets/bottom_navigation.dart';
 
 class AddPetScreen extends StatefulWidget {
@@ -7,16 +11,67 @@ class AddPetScreen extends StatefulWidget {
 }
 
 class _AddPetScreenState extends State<AddPetScreen> {
-  String? species;
-  String? hasVaccines;
+  late LocalStorage localStorage;
+  TextEditingController nameController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
+  TextEditingController weightController = TextEditingController();
+  TextEditingController colorController = TextEditingController();
+  TextEditingController imageController = TextEditingController();
+  String msgError = "";
+
+  @override
+  void initState() {
+    super.initState();
+    localStorage = LocalStorage('my_pet');
+  }
+
+  void addPet() async {
+    await localStorage.ready; 
+    var token = localStorage.getItem("token");
+
+    if (token == null) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginScreen()));
+      return;
+    }
+
+    var client = http.Client();
+    var url = "https://pet-adopt-dq32j.ondigitalocean.app/pet/create";
+    var data = {
+      "name": nameController.text,
+      "color": colorController.text,
+      "weight": weightController.text,
+      "age": ageController.text,
+      "images": [imageController.text]
+    };
+
+    try {
+      var response = await client.post(
+        Uri.parse(url),
+        body: json.encode(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token'
+        },
+      );
+
+      var responseData = json.decode(response.body);
+      setState(() {
+        msgError = responseData['message'];
+      });
+    } catch (e) {
+      setState(() {
+        msgError = "Erro ao adicionar pet: $e";
+      });
+    } finally {
+      client.close();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
- appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false, 
         title: Row(
           children: [
             Text(
@@ -35,233 +90,92 @@ class _AddPetScreenState extends State<AddPetScreen> {
             ),
           ],
         ),
-        actions: [
-          CircleAvatar(
-            backgroundImage: AssetImage('lib/assets/profile_pic.png'),
-          ),
-          SizedBox(width: 10),
-        ],
       ),
       body: SingleChildScrollView(
-        child: Container(
-          
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'My',
-                        style: TextStyle(
-                          color: Colors.blue[900],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 36,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Image.asset(
-                        'lib/assets/pata.png',
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Pet',
-                        style: TextStyle(
-                          color: Colors.blue[900],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 36,
-                        ),
-                      ),
-                    ],
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nome do Pet',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                SizedBox(height: 20),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Nome do Pet',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: ageController,
+                decoration: InputDecoration(
+                  labelText: 'Idade',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Raça',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: weightController,
+                decoration: InputDecoration(
+                  labelText: 'Peso',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Idade',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: colorController,
+                decoration: InputDecoration(
+                  labelText: 'Cor',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Peso',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: imageController,
+                decoration: InputDecoration(
+                  labelText: 'Imagem URL',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular (8),
                   ),
                 ),
-                SizedBox(height: 10),
-                TextField(
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Descrição',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: addPet,
+                child: Text('Adicionar Pet'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink,
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  textStyle: TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Espécie',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Column(
-                  children: [
-                    RadioListTile<String>(
-                      title: Text('Cão'),
-                      value: 'Cão',
-                      groupValue: species,
-                      onChanged: (value) {
-                        setState(() {
-                          species = value;
-                        });
-                      },
-                    ),
-                    RadioListTile<String>(
-                      title: Text('Gato'),
-                      value: 'Gato',
-                      groupValue: species,
-                      onChanged: (value) {
-                        setState(() {
-                          species = value;
-                        });
-                      },
-                    ),
-                    RadioListTile<String>(
-                      title: Text('Ave'),
-                      value: 'Ave',
-                      groupValue: species,
-                      onChanged: (value) {
-                        setState(() {
-                          species = value;
-                        });
-                      },
-                    ),
-                    RadioListTile<String>(
-                      title: Text('Coelho'),
-                      value: 'Coelho',
-                      groupValue: species,
-                      onChanged: (value) {
-                        setState(() {
-                          species = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'O pet tem vacinas?',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('Sim'),
-                        value: 'Sim',
-                        groupValue: hasVaccines,
-                        onChanged: (value) {
-                          setState(() {
-                            hasVaccines = value;
-                          });
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('Não'),
-                        value: 'Não',
-                        groupValue: hasVaccines,
-                        onChanged: (value) {
-                          setState(() {
-                            hasVaccines = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        child: Text('Adicionar Foto'),
-                        onPressed: () {
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        child: Text('Salvar'),
-                        onPressed: () {
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 76, 127, 175),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                msgError,
+                style: TextStyle(color: Colors.red),
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigation(), 
+      bottomNavigationBar: BottomNavigation(),
     );
   }
 }
